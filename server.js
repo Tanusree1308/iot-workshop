@@ -11,7 +11,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://<username>:<password>@cluster.mongodb.net/sensors';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://abdulthafil786:thafil@cluster.mongodb.net/sensors';
 
 // Middleware
 app.use(cors());
