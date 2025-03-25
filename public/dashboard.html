@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Dashboard - Dark Theme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --text-color: #E0E0E0;
+            --accent-color: #2196F3; /* Blue shade */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: var(--accent-color);
+        }
+        .sensor-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .sensor-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+        .sensor-reading {
+            font-size: 24px;
+            color: var(--accent-color);
+            margin: 10px 0;
+        }
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sensor Dashboard</h1>
+    <div class="sensor-container">
+        <div class="sensor-card">
+            <h2>DHT11 Temperature</h2>
+            <div class="sensor-reading" id="dht11Reading">Loading...</div>
+            <canvas id="dht11Chart"></canvas>
+        </div>
+        <div class="sensor-card">
+            <h2>LDR Light Intensity</h2>
+            <div class="sensor-reading" id="ldrReading">Loading...</div>
+            <canvas id="ldrChart"></canvas>
+        </div>
+        <div class="sensor-card">
+            <h2>Ultrasonic Distance</h2>
+            <div class="sensor-reading" id="ultrasonicReading">Loading...</div>
+            <canvas id="ultrasonicChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'https://your-backend-onrender-url.com';
+
+        async function fetchSensorData() {
+            const response = await fetch(`${baseUrl}/sensor-readings`);
+            const data = await response.json();
+            return data;
+        }
+
+        const createChart = (id, label, data) => {
+            new Chart(document.getElementById(id), {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: data.length }, (_, i) => i + 1),
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, labels: { color: 'white' } },
+                    },
+                    scales: {
+                        x: { ticks: { color: 'white' } },
+                        y: { ticks: { color: 'white' }, beginAtZero: true },
+                    },
+                },
+            });
+        };
+
+        async function updateDashboard() {
+            const sensorData = await fetchSensorData();
+
+            document.getElementById('dht11Reading').textContent = `${sensorData.temperature}°C`;
+            document.getElementById('ldrReading').textContent = sensorData.lightIntensity;
+            document.getElementById('ultrasonicReading').textContent = `${sensorData.distance} cm`;
+
+            createChart('dht11Chart', 'Temperature (°C)', sensorData.temperatureHistory);
+            createChart('ldrChart', 'Light Intensity', sensorData.lightIntensityHistory);
+            createChart('ultrasonicChart', 'Distance (cm)', sensorData.distanceHistory);
+        }
+
+        updateDashboard();
+        setInterval(updateDashboard, 5000); // Refresh every 5 seconds
+    </script>
+</body>
+</html>
