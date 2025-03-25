@@ -14,9 +14,9 @@ async function login() {
 
         const { token } = await response.json();
         localStorage.setItem('token', token);  // Store token
-        window.location.href = 'dashboard.html';  // Redirect
+        window.location.href = 'dashboard.html';  // Redirect to dashboard
     } catch (error) {
-        alert('Invalid credentials');
+        alert('Invalid credentials or network error. Please try again.');
     }
 }
 
@@ -30,16 +30,33 @@ async function fetchSensorData() {
 
     try {
         const response = await fetch('http://localhost:3000/api/sensor-data', {
-            headers: { 'Authorization': token }
+            headers: { 'Authorization': `Bearer ${token}` }  // Add Bearer prefix
         });
 
-        if (!response.ok) throw new Error('Failed to fetch data');
+        if (!response.ok) {
+            // If the response is unauthorized, redirect to login
+            if (response.status === 401) {
+                localStorage.removeItem('token'); // Remove expired or invalid token
+                window.location.href = 'index.html'; // Redirect to login
+                return;
+            }
+            throw new Error('Failed to fetch data');
+        }
 
         const data = await response.json();
         console.log(data);  // Handle sensor data (e.g., update graphs)
+        updateDashboard(data);  // Call function to update the dashboard
     } catch (error) {
-        alert('Failed to load sensor data');
+        alert('Failed to load sensor data. Please check your connection.');
     }
+}
+
+// Update Dashboard with fetched data
+function updateDashboard(data) {
+    // Assuming your data contains values like temperature, humidity, etc.
+    document.getElementById('temperature').textContent = `Temperature: ${data.temperature}°C`;
+    document.getElementById('humidity').textContent = `Humidity: ${data.humidity}%`;
+    // You can add code to update graphs or other elements based on `data`
 }
 
 // Call fetchSensorData on page load if on the dashboard

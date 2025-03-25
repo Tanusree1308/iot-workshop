@@ -77,10 +77,31 @@
     <script>
         const baseUrl = 'https://iot-workshop.onrender.com';
 
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            alert("You must be logged in to view this page.");
+            window.location.href = '/login.html'; // Redirect to login page if no token
+        }
+
         async function fetchSensorData() {
-            const response = await fetch(`${baseUrl}/sensor-readings`);
-            const data = await response.json();
-            return data;
+            try {
+                const response = await fetch(`${baseUrl}/sensor-readings`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, // Send token in Authorization header
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch sensor data');
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error(error);
+                alert('Error fetching sensor data');
+            }
         }
 
         const createChart = (id, label, data) => {
@@ -113,13 +134,15 @@
         async function updateDashboard() {
             const sensorData = await fetchSensorData();
 
-            document.getElementById('dht11Reading').textContent = `${sensorData.temperature}°C`;
-            document.getElementById('ldrReading').textContent = sensorData.lightIntensity;
-            document.getElementById('ultrasonicReading').textContent = `${sensorData.distance} cm`;
+            if (sensorData) {
+                document.getElementById('dht11Reading').textContent = `${sensorData.temperature}°C`;
+                document.getElementById('ldrReading').textContent = sensorData.lightIntensity;
+                document.getElementById('ultrasonicReading').textContent = `${sensorData.distance} cm`;
 
-            createChart('dht11Chart', 'Temperature (°C)', sensorData.temperatureHistory);
-            createChart('ldrChart', 'Light Intensity', sensorData.lightIntensityHistory);
-            createChart('ultrasonicChart', 'Distance (cm)', sensorData.distanceHistory);
+                createChart('dht11Chart', 'Temperature (°C)', sensorData.temperatureHistory);
+                createChart('ldrChart', 'Light Intensity', sensorData.lightIntensityHistory);
+                createChart('ultrasonicChart', 'Distance (cm)', sensorData.distanceHistory);
+            }
         }
 
         updateDashboard();
